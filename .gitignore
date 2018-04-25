@@ -57,3 +57,12 @@ typings/
 # dotenv environment variables file
 .env
 
+# IDEs and editors
+/.vscode
+
+# Config
+/config/*.json
+!/config/default.json
+
+# SQLite db file
+/shadow-dashboard.db
