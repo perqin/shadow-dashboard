@@ -7,6 +7,7 @@ async function startEnabledNodes () {
   for (let i = 0, node = nodes[i]; i < nodes.length; ++i) {
     await pm.startProcess({ name: `${node.id}` })
   }
+  await pm.listProcesses()
 }
 
 module.exports = {
