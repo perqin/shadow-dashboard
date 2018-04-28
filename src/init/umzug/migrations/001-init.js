@@ -1,7 +1,13 @@
 module.exports = {
   up: async function (queryInterface, DataTypes) {
+    await queryInterface.createTable('subscriptions', {
+      id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      url: { type: DataTypes.CHAR },
+      newNodeEnabled: { type: DataTypes.BOOLEAN }
+    })
     await queryInterface.createTable('nodes', {
       id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+      subscriptionId: { type: DataTypes.INTEGER, references: { model: 'subscriptions' } },
       enabled: { type: DataTypes.BOOLEAN },
       // `ss` for Shadowsocks, `ssr` for ShadowsocksR and its derivatives
       type: { type: DataTypes.CHAR },

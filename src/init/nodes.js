@@ -3,10 +3,10 @@ const pm = require('../services/process-manager')
 
 async function startEnabledNodes () {
   const nodes = await Node.findAll({ where: { enabled: true } })
-  await pm.startProcess({ name: 'cow' })
-  for (let i = 0, node = nodes[i]; i < nodes.length; ++i) {
+  for (let node of nodes) {
     await pm.startProcess({ name: `${node.id}` })
   }
+  // TODO: Just for debug
   await pm.listProcesses()
 }
 

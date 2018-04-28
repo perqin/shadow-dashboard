@@ -65,4 +65,4 @@ typings/
 !/config/default.json
 
 # SQLite db file
-/shadow-dashboard.db
+/data

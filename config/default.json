@@ -1,5 +1,9 @@
 {
   "storage": {
     "uri": "sqlite://:memory:"
+  },
+  "portsRange": {
+    "min": 0,
+    "max": 1
   }
 }

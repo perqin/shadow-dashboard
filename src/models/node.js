@@ -23,4 +23,26 @@ const Node = sequelize.define('node', {
   protocolParam: { type: DataTypes.CHAR }
 })
 
+Node.isConfigEqual = function (a, b) {
+  if (a.type !== 'ss' && a.type !== 'ssr') {
+    throw new Error(`Unsupported server type: ${a.type}`)
+  }
+  if (b.type !== 'ss' && b.type !== 'ssr') {
+    throw new Error(`Unsupported server type: ${b.type}`)
+  }
+  return a.type === b.type && a.server === b.server && a.serverPort === b.serverPort && a.password === b.password &&
+    a.method === b.method && (a.type === 'ss' ? a.plugin === b.plugin : (a.obfs === b.obfs && a.obfsParam === b.obfsParam &&
+      a.protocol === b.protocol && a.protocolParam === b.protocolParam))
+}
+
+Node.prototype.enable = async function () {
+  // TODO: Allocate port and start process
+  await this.update({ enabled: true })
+}
+
+Node.prototype.disable = async function () {
+  // TODO: Stop process
+  await this.update({ enabled: false })
+}
+
 module.exports = Node

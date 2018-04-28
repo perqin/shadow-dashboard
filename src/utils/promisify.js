@@ -6,10 +6,10 @@ function forFunc (fn, thisArg) {
   }
 }
 
-function forObject (obj, hide) {
+function forObject (obj) {
   for (let key in obj) {
     if (typeof obj[key] === 'function') {
-      obj[hide ? key : `${key}Async`] = forFunc(obj[key], obj)
+      obj[`${key}Async`] = forFunc(obj[key], obj)
     }
   }
   return obj

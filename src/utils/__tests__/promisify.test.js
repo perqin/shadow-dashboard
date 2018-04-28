@@ -1,11 +1,11 @@
 const promisify = require('../promisify')
 
 describe('promisify', () => {
-  function WesternJournalist (name) {
+  function Journalist (name) {
     this.name = name
   }
 
-  WesternJournalist.prototype.run = function (speed, callback) {
+  Journalist.prototype.run = function (speed, callback) {
     setTimeout(() => {
       callback(null, {
         thisObj: this,
@@ -18,38 +18,27 @@ describe('promisify', () => {
   test('forFunc', async () => {
     const name = 'Baohua Zhang'
     const speed = 30000000000
-    const wj = new WesternJournalist(name)
+    const wj = new Journalist(name)
     const fn = promisify.forFunc(wj.run, wj)
     const result = await fn(speed)
     expect(result.thisObj).toBe(wj)
     expect(result.name).toBe(name)
     expect(result.speed).toBe(speed)
-    const another = new WesternJournalist('another')
+    const speed2 = 1
+    const another = new Journalist('western')
     const fn2 = promisify.forFunc(wj.run, another)
-    const result2 = await fn2(speed)
+    const result2 = await fn2(speed2)
     expect(result2.thisObj).toBe(another)
-    expect(result2.name).toBe('another')
-    expect(result2.speed).toBe(speed)
+    expect(result2.name).toBe('western')
+    expect(result2.speed).toBe(speed2)
   })
 
-  test('forObject: not hide', async () => {
+  test('forObject', async () => {
     const name = 'Baohua Zhang'
     const speed = 30000000000
-    const owj = new WesternJournalist(name)
+    const owj = new Journalist(name)
     const wj = promisify.forObject(owj)
     const result = await wj.runAsync(speed)
-    expect(wj).toBe(owj)
-    expect(result.thisObj).toBe(owj)
-    expect(result.name).toBe(name)
-    expect(result.speed).toBe(speed)
-  })
-
-  test('forObject: hide', async () => {
-    const name = 'Baohua Zhang'
-    const speed = 30000000000
-    const owj = new WesternJournalist(name)
-    const wj = promisify.forObject(owj, true)
-    const result = await wj.run(speed)
     expect(wj).toBe(owj)
     expect(result.thisObj).toBe(owj)
     expect(result.name).toBe(name)
