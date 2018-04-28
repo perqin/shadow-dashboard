@@ -19,6 +19,8 @@
     "koa-compose": "^4.0.0",
     "koa-router": "^7.4.0",
     "pm2": "^2.10.2",
+    "request": "^2.85.0",
+    "request-promise-native": "^1.0.5",
     "sequelize": "^4.37.6",
     "sqlite3": "^4.0.0",
     "umzug": "^2.1.0",
