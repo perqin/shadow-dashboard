@@ -23,7 +23,8 @@ module.exports = {
       obfs: { type: DataTypes.CHAR },
       obfsParam: { type: DataTypes.CHAR },
       protocol: { type: DataTypes.CHAR },
-      protocolParam: { type: DataTypes.CHAR }
+      protocolParam: { type: DataTypes.CHAR },
+      remarks: { type: DataTypes.CHAR }
     })
   },
   down: async function () {

@@ -6,7 +6,7 @@ async function listNodes (ctx) {
 }
 
 async function getNodeById (ctx) {
-  ctx.body = await Node.findById(ctx.params.nodeId)
+  ctx.body = await Node.findById(ctx.params.nodeId, { rejectOnEmpty: true })
 }
 
 async function createNode (ctx) {
@@ -24,7 +24,7 @@ async function createNode (ctx) {
 }
 
 async function setNodeEnabledById (ctx) {
-  const node = await Node.findById(ctx.params.nodeId)
+  const node = await Node.findById(ctx.params.nodeId, { rejectOnEmpty: true })
   if (ctx.request.fields.enabled === true) {
     await node.enable()
   } else {

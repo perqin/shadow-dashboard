@@ -31,20 +31,32 @@ Subscription.prototype.fetchNodes = async function () {
     obfs: config.obfs,
     obfsParam: config.obfsParam,
     protocol: config.protocol,
-    protocolParam: config.protocolParam
+    protocolParam: config.protocolParam,
+    remarks: config.remarks
   }))
 }
 
 Subscription.prototype.updateNodes = async function () {
   const oldNodes = await this.getNodes()
   const newNodes = await this.fetchNodes()
+  const updateNodes = []
   for (let i = 0; i < oldNodes.length; ++i) {
     for (let j = 0; j < newNodes.length; ++j) {
       if (oldNodes[i] !== null && newNodes[j] !== null && Node.isConfigEqual(oldNodes[i], newNodes[j])) {
+        // If remarks is changed, update it
+        if (oldNodes[i].remarks !== newNodes[j].remarks) {
+          oldNodes[i].set({
+            remarks: newNodes[j].remarks
+          })
+          updateNodes.push(oldNodes[i])
+        }
         oldNodes[i] = newNodes[j] = null
         break
       }
     }
+  }
+  for (let node of updateNodes) {
+    await node.save()
   }
   const removed = oldNodes.filter(node => node !== null)
   if (removed.length > 0) {

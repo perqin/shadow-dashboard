@@ -1,8 +1,14 @@
 const Koa = require('koa')
 const body = require('koa-better-body')
+const cors = require('@koa/cors')
 const composeRoutes = require('./utils/compose-routes')
 
 const app = new Koa()
+
+// CORS
+if (app.env === 'development') {
+  app.use(cors())
+}
 
 // Body parser
 app.use(body({}))

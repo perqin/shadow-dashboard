@@ -9,7 +9,7 @@ async function createSubscription (ctx) {
 }
 
 async function updateSubscriptionNodes (ctx) {
-  const subscription = await Subscription.findById(ctx.params.subscriptionId)
+  const subscription = await Subscription.findById(ctx.params.subscriptionId, { rejectOnEmpty: true })
   await subscription.updateNodes()
   ctx.response.status = 200
 }

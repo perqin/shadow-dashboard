@@ -10,12 +10,12 @@ const filePath = path.resolve(cwd, 'rc')
 async function generateRcFile () {
   let data = ''
   // TODO: listen: config of port
-  data += `listen = http://127.0.0.1:8132\n`
+  data += `listen = http://127.0.0.1:8123\n`
   // TODO: logFile
   // TODO: alwaysProxy
   // loadBalance
   data += `loadBalance = hash\n`
-  // TODO: Get all nodes
+  // Get all nodes
   const nodes = await Node.findAll({ where: { enabled: true } })
   for (let node of nodes) {
     data += `proxy = socks5://127.0.0.1:${node.localPort}\n`
