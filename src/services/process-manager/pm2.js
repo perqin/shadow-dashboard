@@ -4,13 +4,14 @@ const pm2WithoutPromise = require('pm2')
 const promisify = require('../../utils/promisify')
 
 const pm2 = promisify.forObject(pm2WithoutPromise)
-const scriptsDir = path.resolve(__dirname, '../../../data/pm/pm2')
 
 class PM2 {
   constructor () {
     this.isConnected = false
-    // TODO: Remove
-    this.runningProcess = []
+  }
+
+  getWorkingDirectoryByProcessName (name) {
+    return path.resolve(__dirname, '../../../data/pm/pm2', name)
   }
 
   async connected () {
@@ -34,13 +35,20 @@ class PM2 {
         return
       }
     }
-    const scriptFile = path.resolve(scriptsDir, `${process.name}.sh`)
+    const cwd = this.getWorkingDirectoryByProcessName(process.name)
+    try {
+      await promisify.forFunc(fs.access)(cwd)
+    } catch (err) {
+      console.log(err)
+      await promisify.forFunc(fs.mkdir)(cwd)
+    }
+    const scriptFile = path.resolve(cwd, `${process.name}.sh`)
     const data = `#!/bin/bash\n${process.cmd}\n`
     await promisify.forFunc(fs.writeFile)(scriptFile, data)
     await pm2.startAsync({
       name: processName,
       script: `${scriptFile}`,
-      cwd: scriptsDir, // TODO: What value is better?
+      cwd: cwd,
       interpreter: 'bash'
     })
   }

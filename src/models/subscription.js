@@ -1,6 +1,7 @@
 const request = require('request-promise-native')
 const Sequelize = require('sequelize')
 const sequelize = require('../services/sequelize')
+const cow = require('../services/cow')
 const Node = require('./node')
 const parser = require('../utils/ss-ssr-uri')
 
@@ -63,6 +64,7 @@ Subscription.prototype.updateNodes = async function () {
     }
     await this.addNodes(added)
   }
+  await cow.restart()
 }
 
 module.exports = Subscription

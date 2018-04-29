@@ -1,5 +1,5 @@
 const Node = require('../models/node')
-const pm = require('../services/process-manager')
+const cow = require('../services/cow')
 
 async function listNodes (ctx) {
   ctx.body = await Node.findAll()
@@ -13,7 +13,8 @@ async function createNode (ctx) {
   const node = await Node.create(ctx.request.fields)
   if (node.enabled) {
     try {
-      await pm.startProcess({ name: `${node.id}` })
+      await node.enable()
+      await cow.restart()
     } catch (err) {
       await node.update({ enabled: false })
       throw err
@@ -29,6 +30,7 @@ async function setNodeEnabledById (ctx) {
   } else {
     await node.disable()
   }
+  await cow.restart()
   ctx.response.status = 200
 }
 

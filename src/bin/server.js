@@ -6,8 +6,8 @@ const cow = require('../init/cow')
 const nodes = require('../init/nodes')
 
 async function postServe () {
-  await cow.start()
   await nodes.startEnabledNodes()
+  await cow.start()
 }
 
 Promise.resolve().then(() => {

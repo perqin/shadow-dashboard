@@ -1,5 +1,11 @@
+const path = require('path')
+const fs = require('fs')
 const Sequelize = require('sequelize')
+const config = require('config')
 const sequelize = require('../services/sequelize')
+const pm = require('../services/process-manager')
+const allocatePort = require('../utils/allocate-port')
+const promisify = require('../utils/promisify')
 
 const DataTypes = Sequelize.DataTypes
 
@@ -36,12 +42,53 @@ Node.isConfigEqual = function (a, b) {
 }
 
 Node.prototype.enable = async function () {
-  // TODO: Allocate port and start process
+  // Allocate port
+  const nodes = await Node.findAll({ where: { enabled: true } })
+  const allocatedPorts = nodes.map(node => node.localPort)
+  const min = config.get('portsRange.min')
+  const max = config.get('portsRange.max')
+  const localPort = allocatePort(min, max, allocatedPorts)
+  await this.update({ localPort: localPort })
+  // Write ss/ssr config to file
+  const cwd = pm.getWorkingDirectoryByProcessName(`node-${this.id}`)
+  try {
+    await promisify.forFunc(fs.access)(cwd)
+  } catch (err) {
+    console.log(err)
+    await promisify.forFunc(fs.mkdir)(cwd)
+  }
+  const configFile = path.resolve(cwd, 'config.json')
+  const ssConfig = this.type === 'ss' ? {
+    server: this.server,
+    local_address: this.localAddress,
+    local_port: this.localPort,
+    server_port: this.serverPort,
+    password: this.password,
+    method: this.method,
+    plugin: this.plugin
+  } : {
+    server: this.server,
+    local_address: this.localAddress,
+    local_port: this.localPort,
+    server_port: this.serverPort,
+    password: this.password,
+    method: this.method,
+    obfs: this.obfs,
+    obfs_param: this.obfsParam,
+    protocol: this.protocol,
+    protocol_param: this.protocolParam
+  }
+  await promisify.forFunc(fs.writeFile)(configFile, JSON.stringify(ssConfig))
+  // Start process
+  await pm.startProcess({
+    name: `node-${this.id}`,
+    cmd: `/usr/bin/ssrr-local -c '${configFile}'`
+  }, true)
   await this.update({ enabled: true })
 }
 
 Node.prototype.disable = async function () {
-  // TODO: Stop process
+  await pm.stopProcessByName(`node-${this.id}`)
   await this.update({ enabled: false })
 }
 

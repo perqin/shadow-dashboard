@@ -1,13 +1,10 @@
 const Node = require('../models/node')
-const pm = require('../services/process-manager')
 
 async function startEnabledNodes () {
   const nodes = await Node.findAll({ where: { enabled: true } })
   for (let node of nodes) {
-    await pm.startProcess({ name: `${node.id}` })
+    await node.enable()
   }
-  // TODO: Just for debug
-  await pm.listProcesses()
 }
 
 module.exports = {

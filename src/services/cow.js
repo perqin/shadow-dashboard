@@ -1,9 +1,11 @@
 const path = require('path')
 const fs = require('fs')
+const Node = require('../models/node')
 const pm = require('./process-manager')
 const promisify = require('../utils/promisify')
 
-const filePath = path.resolve(__dirname, '../../data/cow/rc')
+const cwd = pm.getWorkingDirectoryByProcessName('cow')
+const filePath = path.resolve(cwd, 'rc')
 
 async function generateRcFile () {
   let data = ''
@@ -14,7 +16,10 @@ async function generateRcFile () {
   // loadBalance
   data += `loadBalance = hash\n`
   // TODO: Get all nodes
-  data += `proxy = socks5://127.0.0.1:1104\n`
+  const nodes = await Node.findAll({ where: { enabled: true } })
+  for (let node of nodes) {
+    data += `proxy = socks5://127.0.0.1:${node.localPort}\n`
+  }
   // NOTE: ssh feature is ignored
   // TODO: Authentication feature
   // TODO: httpErrorCode
@@ -25,6 +30,12 @@ async function generateRcFile () {
   // TODO: readTimeout
   // TODO: detectSSLErr
   // TODO: stat/blocked/direct files
+  try {
+    await promisify.forFunc(fs.access)(cwd)
+  } catch (err) {
+    console.log(err)
+    await promisify.forFunc(fs.mkdir)(cwd)
+  }
   await promisify.forFunc(fs.writeFile)(filePath, data)
 }
 
@@ -41,7 +52,13 @@ async function stop () {
   await pm.stopProcessByName('cow')
 }
 
+async function restart () {
+  await stop()
+  await start()
+}
+
 module.exports = {
   start,
-  stop
+  stop,
+  restart
 }
