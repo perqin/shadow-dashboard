@@ -1,7 +1,7 @@
-const cow = require('../services/cow')
+const Cow = require('../models/cow')
 
 async function start () {
-  await cow.start()
+  await Cow.start()
 }
 
 module.exports = {

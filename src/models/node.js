@@ -2,8 +2,8 @@ const path = require('path')
 const fs = require('fs')
 const Sequelize = require('sequelize')
 const config = require('config')
-const sequelize = require('../services/sequelize')
-const pm = require('../services/process-manager')
+const sequelize = require('../base/sequelize')
+const pm = require('../base/process-manager')
 const allocatePort = require('../utils/allocate-port')
 const promisify = require('../utils/promisify')
 
@@ -42,7 +42,7 @@ Node.isConfigEqual = function (a, b) {
       a.protocol === b.protocol && a.protocolParam === b.protocolParam))
 }
 
-Node.prototype.enable = async function () {
+Node.prototype.start = async function () {
   // Allocate port
   const nodes = await Node.findAll({ where: { enabled: true } })
   const allocatedPorts = nodes.map(node => node.localPort)
@@ -88,9 +88,12 @@ Node.prototype.enable = async function () {
   await this.update({ enabled: true })
 }
 
-Node.prototype.disable = async function () {
+Node.prototype.stop = async function () {
   await pm.stopProcessByName(`node-${this.id}`)
-  await this.update({ enabled: false })
+}
+
+Node.prototype.getProxy = function () {
+  return `socks5://${this.localAddress}:${this.localPort}`
 }
 
 module.exports = Node

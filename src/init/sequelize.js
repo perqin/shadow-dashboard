@@ -1,4 +1,4 @@
-const sequelize = require('../services/sequelize')
+const sequelize = require('../base/sequelize')
 
 async function getAuthenticatedInstance () {
   await sequelize.authenticate()

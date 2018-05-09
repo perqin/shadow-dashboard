@@ -1,21 +1,36 @@
-const Subscription = require('../models/subscription')
-
-async function listSubscriptions (ctx) {
-  ctx.body = await Subscription.findAll()
-}
+const SubscriptionService = require('../services/subscription')
+const subscriptionService = new SubscriptionService(require('../models/node'), require('../models/cow'))
 
 async function createSubscription (ctx) {
-  ctx.body = await Subscription.create(ctx.request.fields)
+  ctx.body = await subscriptionService.createSubscription(ctx.request.fields)
+}
+
+async function listSubscriptions (ctx) {
+  ctx.body = await subscriptionService.listSubscriptions()
+}
+
+async function getSubscriptionById (ctx) {
+  ctx.body = await subscriptionService.findSubscription(Number(ctx.params.subscriptionId))
+}
+
+async function updateSubscription (ctx) {
+  await subscriptionService.updateSubscription(Number(ctx.params.subscriptionId))
 }
 
 async function updateSubscriptionNodes (ctx) {
-  const subscription = await Subscription.findById(ctx.params.subscriptionId, { rejectOnEmpty: true })
-  await subscription.updateNodes()
+  await subscriptionService.updateSubscriptionNodes(Number(ctx.params.subscriptionId))
   ctx.response.status = 200
 }
 
+async function removeSubscription (ctx) {
+  await subscriptionService.removeSubscription(Number(ctx.params.subscriptionId))
+}
+
 module.exports = {
-  listSubscriptions,
   createSubscription,
-  updateSubscriptionNodes
+  listSubscriptions,
+  getSubscriptionById,
+  updateSubscription,
+  updateSubscriptionNodes,
+  removeSubscription
 }
