@@ -51,6 +51,7 @@ class Config {
     try {
       await promisify.forFunc(fs.access)(dir)
     } catch (err) {
+      console.log(`Creating directories due to error: ${err.message}`)
       await promisify.forFunc(fs.mkdir)(dir)
     }
     // Write config file
@@ -63,6 +64,7 @@ const processName = 'cow'
 const configPath = require('path').resolve(pm.getWorkingDirectoryByProcessName(processName), 'rc')
 
 async function start () {
+  await config.save(configPath)
   await pm.startProcess({
     name: processName,
     cmd: `/usr/bin/cow -rc '${configPath}'`
@@ -80,12 +82,10 @@ async function restart () {
 
 async function addProxy (proxy) {
   config.addProxy(proxy)
-  await config.save()
 }
 
 async function removeProxy (proxy) {
   config.removeProxy(proxy)
-  await config.save()
 }
 
 module.exports = {

@@ -8,6 +8,7 @@ const allocatePort = require('../utils/allocate-port')
 const promisify = require('../utils/promisify')
 
 const DataTypes = Sequelize.DataTypes
+const Op = Sequelize.Op
 
 const Node = sequelize.define('node', {
   id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
@@ -44,7 +45,10 @@ Node.isConfigEqual = function (a, b) {
 
 Node.prototype.start = async function () {
   // Allocate port
-  const nodes = await Node.findAll({ where: { enabled: true } })
+  const nodes = await Node.findAll({ where: {
+    id: { [Op.ne]: this.id },
+    enabled: true
+  } })
   const allocatedPorts = nodes.map(node => node.localPort)
   const min = config.get('portsRange.min')
   const max = config.get('portsRange.max')
@@ -55,7 +59,7 @@ Node.prototype.start = async function () {
   try {
     await promisify.forFunc(fs.access)(cwd)
   } catch (err) {
-    console.log(err)
+    console.log(`Creating directories due to error: ${err.message}`)
     await promisify.forFunc(fs.mkdir)(cwd)
   }
   const configFile = path.resolve(cwd, 'config.json')
