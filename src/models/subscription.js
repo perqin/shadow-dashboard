@@ -61,8 +61,7 @@ Subscription.prototype.updateNodes = async function () {
   if (removed.length > 0) {
     await this.removeNodes(removed)
     for (let node of removed) {
-      await node.disable()
-      await node.destroy()
+      await node.stop()
     }
   }
   const added = newNodes.filter(node => node !== null)
@@ -70,7 +69,7 @@ Subscription.prototype.updateNodes = async function () {
     for (let node of added) {
       await node.save()
       if (this.newNodeEnabled) {
-        await node.enable()
+        await node.start()
       }
     }
     await this.addNodes(added)

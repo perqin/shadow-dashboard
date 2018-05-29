@@ -6,6 +6,7 @@ const sequelize = require('../base/sequelize')
 const pm = require('../base/process-manager')
 const allocatePort = require('../utils/allocate-port')
 const promisify = require('../utils/promisify')
+const mkdirs = require('../utils/mkdirs')
 
 const DataTypes = Sequelize.DataTypes
 const Op = Sequelize.Op
@@ -17,7 +18,7 @@ const Node = sequelize.define('node', {
   type: { type: DataTypes.CHAR },
   server: { type: DataTypes.CHAR },
   localAddress: { type: DataTypes.CHAR, defaultValue: '127.0.0.1' },
-  localPort: { type: DataTypes.INTEGER, unique: true },
+  localPort: { type: DataTypes.INTEGER },
   serverPort: { type: DataTypes.INTEGER },
   password: { type: DataTypes.CHAR },
   method: { type: DataTypes.CHAR },
@@ -56,12 +57,7 @@ Node.prototype.start = async function () {
   await this.update({ localPort: localPort })
   // Write ss/ssr config to file
   const cwd = pm.getWorkingDirectoryByProcessName(`node-${this.id}`)
-  try {
-    await promisify.forFunc(fs.access)(cwd)
-  } catch (err) {
-    console.log(`Creating directories due to error: ${err.message}`)
-    await promisify.forFunc(fs.mkdir)(cwd)
-  }
+  await mkdirs(cwd)
   const configFile = path.resolve(cwd, 'config.json')
   const ssConfig = this.type === 'ss' ? {
     server: this.server,

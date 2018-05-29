@@ -13,7 +13,7 @@ module.exports = {
       type: { type: DataTypes.CHAR },
       server: { type: DataTypes.CHAR },
       localAddress: { type: DataTypes.CHAR },
-      localPort: { type: DataTypes.INTEGER, unique: true },
+      localPort: { type: DataTypes.INTEGER },
       serverPort: { type: DataTypes.INTEGER },
       password: { type: DataTypes.CHAR },
       method: { type: DataTypes.CHAR },

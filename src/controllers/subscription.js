@@ -1,5 +1,5 @@
 const SubscriptionService = require('../services/subscription')
-const subscriptionService = new SubscriptionService(require('../models/node'), require('../models/cow'))
+const subscriptionService = new SubscriptionService(require('../models/subscription'), require('../models/cow'))
 
 async function createSubscription (ctx) {
   ctx.body = await subscriptionService.createSubscription(ctx.request.fields)

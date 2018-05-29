@@ -1,6 +1,7 @@
 const pm = require('../base/process-manager')
 const fs = require('fs')
 const promisify = require('../utils/promisify')
+const mkdirs = require('../utils/mkdirs')
 
 class Config {
   constructor () {
@@ -48,12 +49,7 @@ class Config {
     // TODO: stat/blocked/direct files
     // Create parent directory if needed
     const dir = require('path').dirname(path)
-    try {
-      await promisify.forFunc(fs.access)(dir)
-    } catch (err) {
-      console.log(`Creating directories due to error: ${err.message}`)
-      await promisify.forFunc(fs.mkdir)(dir)
-    }
+    await mkdirs(dir)
     // Write config file
     await promisify.forFunc(fs.writeFile)(path, data)
   }
@@ -62,6 +58,7 @@ class Config {
 const config = new Config()
 const processName = 'cow'
 const configPath = require('path').resolve(pm.getWorkingDirectoryByProcessName(processName), 'rc')
+let started = false
 
 async function start () {
   await config.save(configPath)
@@ -69,10 +66,12 @@ async function start () {
     name: processName,
     cmd: `/usr/bin/cow -rc '${configPath}'`
   }, true)
+  started = true
 }
 
 async function stop () {
   await pm.stopProcessByName(processName)
+  started = false
 }
 
 async function restart () {
@@ -80,12 +79,20 @@ async function restart () {
   await start()
 }
 
+async function onConfigUpdated () {
+  if (started) {
+    await restart()
+  }
+}
+
 async function addProxy (proxy) {
   config.addProxy(proxy)
+  await onConfigUpdated()
 }
 
 async function removeProxy (proxy) {
   config.removeProxy(proxy)
+  await onConfigUpdated()
 }
 
 module.exports = {

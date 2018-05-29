@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 const pm2WithoutPromise = require('pm2')
 const promisify = require('../../utils/promisify')
+const mkdirs = require('../../utils/mkdirs')
 
 const pm2 = promisify.forObject(pm2WithoutPromise)
 
@@ -36,12 +37,7 @@ class PM2 {
       }
     }
     const cwd = this.getWorkingDirectoryByProcessName(process.name)
-    try {
-      await promisify.forFunc(fs.access)(cwd)
-    } catch (err) {
-      console.log(err)
-      await promisify.forFunc(fs.mkdir)(cwd)
-    }
+    await mkdirs(cwd)
     const scriptFile = path.resolve(cwd, `${process.name}.sh`)
     const data = `#!/bin/bash\n${process.cmd}\n`
     await promisify.forFunc(fs.writeFile)(scriptFile, data)
