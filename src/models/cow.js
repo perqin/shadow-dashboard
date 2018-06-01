@@ -1,40 +1,59 @@
+const path = require('path')
 const pm = require('../base/process-manager')
-const fs = require('fs')
-const promisify = require('../utils/promisify')
-const mkdirs = require('../utils/mkdirs')
+const jsonStore = require('../base/json-store')
+const writeFileQuietly = require('../utils/write-file-quietly')
 
 class Config {
-  constructor () {
-    this.configLoaded = false
-    // Default fields and config
-    this.proxies = []
+  constructor (name, rcPath) {
+    this.rc = rcPath
+    this.json = jsonStore.build(name)
+    this.persisted = {
+      enabled: true,
+      listen: 'http://127.0.0.1:8123',
+      loadBalance: 'hash'
+    }
+    this.memory = {
+      started: false,
+      proxies: []
+    }
+  }
+
+  async loadFromJson () {
+    const data = await this.json.load({})
+    this.persisted = {...this.persisted, ...data}
+  }
+
+  async saveToJson () {
+    await this.json.save(this.persisted)
   }
 
   addProxy (proxy) {
-    const exist = this.proxies.find(p => p === proxy)
+    const proxies = this.memory.proxies
+    const exist = proxies.find(p => p === proxy)
     if (!exist) {
-      this.proxies.push(proxy)
+      proxies.push(proxy)
     }
   }
 
   removeProxy (proxy) {
-    const index = this.proxies.findIndex(p => p === proxy)
+    const proxies = this.memory.proxies
+    const index = proxies.findIndex(p => p === proxy)
     if (index >= 0) {
-      this.proxies.splice(index, 1)
+      proxies.splice(index, 1)
     }
   }
 
-  async save (path) {
+  async saveToRc () {
     // Construct config file content
     let data = ''
-    // TODO: listen: config of port
-    data += `listen = http://127.0.0.1:8123\n`
+    // listen
+    data += `listen = ${this.persisted.listen}\n`
     // TODO: logFile
     // TODO: alwaysProxy
     // loadBalance
-    data += `loadBalance = hash\n`
+    data += `loadBalance = ${this.persisted.loadBalance}\n`
     // Get all proxies
-    for (let proxy of this.proxies) {
+    for (let proxy of this.memory.proxies) {
       data += `proxy = ${proxy}\n`
     }
     // NOTE: ssh feature is ignored
@@ -47,31 +66,27 @@ class Config {
     // TODO: readTimeout
     // TODO: detectSSLErr
     // TODO: stat/blocked/direct files
-    // Create parent directory if needed
-    const dir = require('path').dirname(path)
-    await mkdirs(dir)
-    // Write config file
-    await promisify.forFunc(fs.writeFile)(path, data)
+    // Generate config file
+    await writeFileQuietly(this.rc, data)
   }
 }
 
-const config = new Config()
 const processName = 'cow'
-const configPath = require('path').resolve(pm.getWorkingDirectoryByProcessName(processName), 'rc')
-let started = false
+const rcPath = path.resolve(pm.getWorkingDirectoryByProcessName(processName), 'rc')
+const config = new Config(processName, rcPath)
 
 async function start () {
-  await config.save(configPath)
+  await config.saveToRc()
   await pm.startProcess({
     name: processName,
-    cmd: `/usr/bin/cow -rc '${configPath}'`
+    cmd: `/usr/bin/cow -rc '${rcPath}'`
   }, true)
-  started = true
+  config.memory.started = true
 }
 
 async function stop () {
   await pm.stopProcessByName(processName)
-  started = false
+  config.memory.started = false
 }
 
 async function restart () {
@@ -80,9 +95,19 @@ async function restart () {
 }
 
 async function onConfigUpdated () {
-  if (started) {
+  await config.saveToJson()
+  if (config.persisted.enabled && config.memory.started) {
     await restart()
+  } else if (config.persisted.enabled && !config.memory.started) {
+    await start()
+  } else if (!config.persisted.enabled && config.memory.started) {
+    await stop()
   }
+}
+
+async function loadConfig () {
+  await config.loadFromJson()
+  await onConfigUpdated()
 }
 
 async function addProxy (proxy) {
@@ -95,10 +120,22 @@ async function removeProxy (proxy) {
   await onConfigUpdated()
 }
 
+function getConfig () {
+  return config.persisted
+}
+
+async function updateConfig (payload) {
+  config.persisted = { ...config.persisted, ...payload }
+  await onConfigUpdated()
+}
+
 module.exports = {
+  loadConfig,
   start,
   restart,
   stop,
   addProxy,
-  removeProxy
+  removeProxy,
+  getConfig,
+  updateConfig
 }

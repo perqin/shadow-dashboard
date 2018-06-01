@@ -68,6 +68,7 @@ Subscription.prototype.updateNodes = async function () {
   if (added.length > 0) {
     for (let node of added) {
       await node.save()
+      await node.setSubscription(this.id)
       if (this.newNodeEnabled) {
         await node.start()
       }

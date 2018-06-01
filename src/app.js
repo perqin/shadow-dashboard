@@ -16,5 +16,6 @@ app.use(body({}))
 // Routes
 app.use(composeRoutes(require('./routers/node')))
 app.use(composeRoutes(require('./routers/subscription')))
+app.use(composeRoutes(require('./routers/setting')))
 
 module.exports = app
