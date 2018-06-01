@@ -17,6 +17,8 @@ class SubscriptionService {
   }
 
   async updateSubscription (id, data) {
+    // Avoid id modified
+    delete data.id
     await this.Subscription.update(data, {
       where: { id: id },
       rejectOnEmpty: true

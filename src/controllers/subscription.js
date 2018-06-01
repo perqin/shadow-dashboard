@@ -14,7 +14,8 @@ async function getSubscriptionById (ctx) {
 }
 
 async function updateSubscription (ctx) {
-  await subscriptionService.updateSubscription(Number(ctx.params.subscriptionId))
+  await subscriptionService.updateSubscription(Number(ctx.params.subscriptionId), ctx.request.fields)
+  ctx.response.status = 200
 }
 
 async function updateSubscriptionNodes (ctx) {
@@ -24,6 +25,7 @@ async function updateSubscriptionNodes (ctx) {
 
 async function removeSubscription (ctx) {
   await subscriptionService.removeSubscription(Number(ctx.params.subscriptionId))
+  ctx.response.status = 200
 }
 
 module.exports = {

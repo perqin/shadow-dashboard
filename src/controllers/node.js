@@ -15,6 +15,7 @@ async function getNodeById (ctx) {
 
 async function updateNodeById (ctx) {
   await nodeService.updateNode(Number(ctx.params.nodeId), ctx.request.fields)
+  ctx.response.status = 200
 }
 
 async function setNodeEnabledById (ctx) {
