@@ -1,4 +1,6 @@
+const path = require('path')
 const Koa = require('koa')
+const serve = require('koa-static')
 const body = require('koa-better-body')
 const cors = require('@koa/cors')
 const composeRoutes = require('./utils/compose-routes')
@@ -12,6 +14,9 @@ if (app.env === 'development') {
 
 // Body parser
 app.use(body({}))
+
+// Static routes
+app.use(serve(path.resolve(__dirname, 'public')))
 
 // Routes
 app.use(composeRoutes(require('./routers/node')))
