@@ -9,6 +9,7 @@ class Cow {
     this.rc = rc
     this.jsonConfig = new JsonConfig(this.name, {
       enabled: true,
+      executablePath: '/usr/bin/cow',
       listen: 'http://127.0.0.1:8123',
       loadBalance: 'hash'
     }, {
@@ -44,13 +45,13 @@ class Cow {
     await writeFileQuietly(this.rc, data)
   }
 
-  async start () {
+  async start (force) {
     if (!this.jsonConfig.memory.started) {
       await this.saveToRc()
       await pm.startProcess({
         name: this.name,
         cmd: `${this.jsonConfig.file.executablePath} -rc '${this.rc}'`
-      })
+      }, force)
       this.jsonConfig.memory.started = true
     }
   }
@@ -64,14 +65,14 @@ class Cow {
 
   async restart () {
     await this.stop()
-    await this.start()
+    await this.start(true)
   }
 
   async reload () {
     if (this.jsonConfig.file.enabled) {
-      this.restart()
+      await this.restart()
     } else {
-      this.stop()
+      await this.stop()
     }
   }
 }

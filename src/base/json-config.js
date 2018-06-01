@@ -31,14 +31,15 @@ class JsonConfig {
   }
 
   /**
-   * Overwrite `this.file` if file exists, save `this.file` back otherwise.
+   * Merge into `this.file` if file exists, and then save `this.file` back.
    */
   async loadOrSave () {
     try {
       const json = await readFile(this.path, { encoding: 'utf8' })
-      this.file = JSON.parse(json)
+      this.file = { ...this.file, ...JSON.parse(json) }
+      await this.save()
     } catch (ignored) {
-      this.save()
+      await this.save()
     }
   }
 }
