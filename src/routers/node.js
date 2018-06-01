@@ -3,6 +3,14 @@ const nodeController = require('../controllers/node')
 
 const router = new Router()
 
+router.get('/nodes/config', async ctx => {
+  await nodeController.getConfig(ctx)
+})
+
+router.put('/nodes/config', async ctx => {
+  await nodeController.updateConfig(ctx)
+})
+
 router.get('/nodes', async ctx => {
   await nodeController.listNodes(ctx)
 })

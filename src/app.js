@@ -21,6 +21,6 @@ app.use(serve(path.resolve(__dirname, 'public')))
 // Routes
 app.use(composeRoutes(require('./routers/node')))
 app.use(composeRoutes(require('./routers/subscription')))
-app.use(composeRoutes(require('./routers/setting')))
+app.use(composeRoutes(require('./routers/cow')))
 
 module.exports = app

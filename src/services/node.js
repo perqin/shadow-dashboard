@@ -1,7 +1,17 @@
+const arrayUtils = require('../utils/array-utils')
+
 class NodeService {
   constructor (Node, Cow) {
     this.Node = Node
     this.Cow = Cow
+  }
+
+  async getConfig () {
+    return this.Node.jsonConfig.file
+  }
+
+  async updateConfig (config) {
+    this.Node.jsonConfig.file = { ...this.Node.jsonConfig.file, ...config }
   }
 
   async createNode (data) {
@@ -9,7 +19,8 @@ class NodeService {
     // Start node client if needed
     if (node.enabled) {
       await node.start()
-      await this.Cow.addProxy(node.getProxy())
+      arrayUtils.addIfNotExists(this.Cow.jsonConfig.memory.proxies, node.getProxy())
+      await this.Cow.reload()
     }
     return node
   }
@@ -37,10 +48,12 @@ class NodeService {
       await node.update({ enabled: enabled })
       if (enabled) {
         await node.start()
-        await this.Cow.addProxy(node.getProxy())
+        arrayUtils.addIfNotExists(this.Cow.jsonConfig.memory.proxies, node.getProxy())
+        await this.Cow.reload()
       } else {
         await node.stop()
-        await this.Cow.removeProxy(node.getProxy())
+        arrayUtils.removeIfExists(this.Cow.jsonConfig.memory.proxies, node.getProxy())
+        await this.Cow.reload()
       }
     }
   }

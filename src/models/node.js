@@ -4,6 +4,7 @@ const Sequelize = require('sequelize')
 const config = require('config')
 const sequelize = require('../base/sequelize')
 const pm = require('../base/process-manager')
+const JsonConfig = require('../base/json-config')
 const allocatePort = require('../utils/allocate-port')
 const promisify = require('../utils/promisify')
 const mkdirs = require('../utils/mkdirs')
@@ -44,6 +45,10 @@ Node.isConfigEqual = function (a, b) {
       a.protocol === b.protocol && a.protocolParam === b.protocolParam))
 }
 
+Node.jsonConfig = new JsonConfig('node', {
+  executablePath: '/usr/bin/ssrr-local'
+})
+
 Node.prototype.start = async function () {
   // Allocate port
   const nodes = await Node.findAll({ where: {
@@ -83,7 +88,7 @@ Node.prototype.start = async function () {
   // Start process
   await pm.startProcess({
     name: `node-${this.id}`,
-    cmd: `/usr/bin/ssrr-local -c '${configFile}'`
+    cmd: `${Node.jsonConfig.file.executablePath} -c '${configFile}'`
   }, true)
   await this.update({ enabled: true })
 }

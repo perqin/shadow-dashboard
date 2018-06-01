@@ -1,6 +1,15 @@
 const NodeService = require('../services/node')
 const nodeService = new NodeService(require('../models/node'), require('../models/cow'))
 
+async function getConfig (ctx) {
+  ctx.body = await nodeService.getConfig()
+}
+
+async function updateConfig (ctx) {
+  await nodeService.updateConfig(ctx.request.fields)
+  ctx.response.status = 200
+}
+
 async function createNode (ctx) {
   ctx.body = await nodeService.createNode(ctx.request.fields)
 }
@@ -29,6 +38,8 @@ async function removeNodeById (ctx) {
 }
 
 module.exports = {
+  getConfig,
+  updateConfig,
   createNode,
   listNodes,
   getNodeById,

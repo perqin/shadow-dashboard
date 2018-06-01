@@ -1,59 +1,33 @@
 const path = require('path')
 const pm = require('../base/process-manager')
-const jsonStore = require('../base/json-store')
+const JsonConfig = require('../base/json-config')
 const writeFileQuietly = require('../utils/write-file-quietly')
 
-class Config {
-  constructor (name, rcPath) {
-    this.rc = rcPath
-    this.json = jsonStore.build(name)
-    this.persisted = {
+class Cow {
+  constructor (name, rc) {
+    this.name = name
+    this.rc = rc
+    this.jsonConfig = new JsonConfig(this.name, {
       enabled: true,
       listen: 'http://127.0.0.1:8123',
       loadBalance: 'hash'
-    }
-    this.memory = {
+    }, {
       started: false,
       proxies: []
-    }
-  }
-
-  async loadFromJson () {
-    const data = await this.json.load({})
-    this.persisted = {...this.persisted, ...data}
-  }
-
-  async saveToJson () {
-    await this.json.save(this.persisted)
-  }
-
-  addProxy (proxy) {
-    const proxies = this.memory.proxies
-    const exist = proxies.find(p => p === proxy)
-    if (!exist) {
-      proxies.push(proxy)
-    }
-  }
-
-  removeProxy (proxy) {
-    const proxies = this.memory.proxies
-    const index = proxies.findIndex(p => p === proxy)
-    if (index >= 0) {
-      proxies.splice(index, 1)
-    }
+    })
   }
 
   async saveToRc () {
     // Construct config file content
     let data = ''
     // listen
-    data += `listen = ${this.persisted.listen}\n`
+    data += `listen = ${this.jsonConfig.file.listen}\n`
     // TODO: logFile
     // TODO: alwaysProxy
     // loadBalance
-    data += `loadBalance = ${this.persisted.loadBalance}\n`
+    data += `loadBalance = ${this.jsonConfig.file.loadBalance}\n`
     // Get all proxies
-    for (let proxy of this.memory.proxies) {
+    for (let proxy of this.jsonConfig.memory.proxies) {
       data += `proxy = ${proxy}\n`
     }
     // NOTE: ssh feature is ignored
@@ -69,73 +43,41 @@ class Config {
     // Generate config file
     await writeFileQuietly(this.rc, data)
   }
+
+  async start () {
+    if (!this.jsonConfig.memory.started) {
+      await this.saveToRc()
+      await pm.startProcess({
+        name: this.name,
+        cmd: `${this.jsonConfig.file.executablePath} -rc '${this.rc}'`
+      })
+      this.jsonConfig.memory.started = true
+    }
+  }
+
+  async stop () {
+    if (this.jsonConfig.memory.started) {
+      await pm.stopProcessByName(this.name)
+      this.jsonConfig.memory.started = false
+    }
+  }
+
+  async restart () {
+    await this.stop()
+    await this.start()
+  }
+
+  async reload () {
+    if (this.jsonConfig.file.enabled) {
+      this.restart()
+    } else {
+      this.stop()
+    }
+  }
 }
 
 const processName = 'cow'
 const rcPath = path.resolve(pm.getWorkingDirectoryByProcessName(processName), 'rc')
-const config = new Config(processName, rcPath)
+const cow = new Cow(processName, rcPath)
 
-async function start () {
-  await config.saveToRc()
-  await pm.startProcess({
-    name: processName,
-    cmd: `/usr/bin/cow -rc '${rcPath}'`
-  }, true)
-  config.memory.started = true
-}
-
-async function stop () {
-  await pm.stopProcessByName(processName)
-  config.memory.started = false
-}
-
-async function restart () {
-  await stop()
-  await start()
-}
-
-async function onConfigUpdated () {
-  await config.saveToJson()
-  if (config.persisted.enabled && config.memory.started) {
-    await restart()
-  } else if (config.persisted.enabled && !config.memory.started) {
-    await start()
-  } else if (!config.persisted.enabled && config.memory.started) {
-    await stop()
-  }
-}
-
-async function loadConfig () {
-  await config.loadFromJson()
-  await onConfigUpdated()
-}
-
-async function addProxy (proxy) {
-  config.addProxy(proxy)
-  await onConfigUpdated()
-}
-
-async function removeProxy (proxy) {
-  config.removeProxy(proxy)
-  await onConfigUpdated()
-}
-
-function getConfig () {
-  return config.persisted
-}
-
-async function updateConfig (payload) {
-  config.persisted = { ...config.persisted, ...payload }
-  await onConfigUpdated()
-}
-
-module.exports = {
-  loadConfig,
-  start,
-  restart,
-  stop,
-  addProxy,
-  removeProxy,
-  getConfig,
-  updateConfig
-}
+module.exports = cow

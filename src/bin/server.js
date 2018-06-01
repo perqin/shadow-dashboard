@@ -1,6 +1,7 @@
 const debug = require('debug')('shadow-dashboard:server')
 const sequelize = require('../init/sequelize')
 const umzug = require('../init/umzug')
+const jsonConfig = require('../init/json-config')
 const app = require('../init/app')
 const nodes = require('../init/nodes')
 const cow = require('../init/cow')
@@ -16,6 +17,8 @@ Promise.resolve().then(() => {
   return sequelize.getAuthenticatedInstance()
 }).then(seq => {
   return umzug.migrate(seq)
+}).then(() => {
+  return jsonConfig.loadJsonConfigs()
 }).then(() => {
   return app.serve(port)
 }).then(() => {

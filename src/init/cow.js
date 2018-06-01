@@ -1,7 +1,7 @@
 const Cow = require('../models/cow')
 
 async function start () {
-  await Cow.loadConfig()
+  await Cow.reload()
 }
 
 module.exports = {
