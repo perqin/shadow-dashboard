@@ -8,10 +8,10 @@ class Cow {
     this.name = name
     this.rc = rc
     this.jsonConfig = new JsonConfig(this.name, {
-      enabled: true,
+      enabled: false,
       executablePath: '/usr/bin/cow',
       listen: 'http://127.0.0.1:8123',
-      loadBalance: 'hash'
+      loadBalance: 'backup'
     }, {
       started: false,
       proxies: []

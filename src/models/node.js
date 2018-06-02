@@ -46,7 +46,7 @@ Node.isConfigEqual = function (a, b) {
 }
 
 Node.jsonConfig = new JsonConfig('node', {
-  executablePath: '/usr/bin/ssrr-local'
+  executablePath: '/usr/bin/ssr-local'
 })
 
 Node.prototype.start = async function () {
