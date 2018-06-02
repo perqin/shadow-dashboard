@@ -1,6 +1,6 @@
 {
   "name": "shadow-dashboard",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Local Shadowsocks and ShadowsocksR dashboard for multiple clients on Linux.",
   "main": "src/bin/server.js",
   "repository": "git@github.com:perqin/shadow-dashboard.git",
